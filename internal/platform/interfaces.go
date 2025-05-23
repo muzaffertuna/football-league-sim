@@ -1,4 +1,3 @@
-// platform/interfaces.go
 package platform
 
 import "net/http"
