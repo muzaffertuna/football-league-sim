@@ -14,6 +14,8 @@ type MatchRepository interface {
 	GetMatchByID(id int) (*models.Match, error)
 	GetMatchesByWeek(week int) ([]models.Match, error)
 	UpdateMatch(match *models.Match) error
+	DeleteAllMatches() error // Yeni metod
+	GetAllMatches() ([]models.Match, error)
 }
 
 type LeagueRepository interface {

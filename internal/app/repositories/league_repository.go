@@ -21,7 +21,7 @@ func (r *leagueRepository) GetLeague() (*models.League, error) {
 	if err != nil {
 		return nil, err
 	}
-	matches, err := r.matchRepo.GetMatchesByWeek(r.league.CurrentWeek)
+	matches, err := r.matchRepo.GetAllMatches()
 	if err != nil {
 		return nil, err
 	}

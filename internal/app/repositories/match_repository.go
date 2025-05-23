@@ -93,16 +93,48 @@ func (r *matchRepository) GetMatchesByWeek(week int) ([]models.Match, error) {
 func (r *matchRepository) UpdateMatch(match *models.Match) error {
 	query := `
         UPDATE Matches
-        SET HomeTeamID = @p1, AwayTeamID = @p2, HomeGoals = @p3, AwayGoals = @p4, Week = @p5, Played = @p6
-        WHERE ID = @p7`
+        SET HomeGoals = @p1, AwayGoals = @p2, Played = @p3
+        WHERE ID = @p4`
 	_, err := r.db.Exec(query,
-		sql.Named("p1", match.HomeTeamID),
-		sql.Named("p2", match.AwayTeamID),
-		sql.Named("p3", match.HomeGoals),
-		sql.Named("p4", match.AwayGoals),
-		sql.Named("p5", match.Week),
-		sql.Named("p6", match.Played),
-		sql.Named("p7", match.ID),
+		sql.Named("p1", match.HomeGoals),
+		sql.Named("p2", match.AwayGoals),
+		sql.Named("p3", match.Played),
+		sql.Named("p4", match.ID),
 	)
 	return err
+}
+
+func (r *matchRepository) DeleteAllMatches() error {
+	query := "DELETE FROM Matches"
+	_, err := r.db.Exec(query)
+	return err
+}
+
+func (r *matchRepository) GetAllMatches() ([]models.Match, error) {
+	query := `
+        SELECT ID, HomeTeamID, AwayTeamID, HomeGoals, AwayGoals, Week, Played
+        FROM Matches`
+	rows, err := r.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	matches := []models.Match{}
+	for rows.Next() {
+		match := models.Match{}
+		if err := rows.Scan(
+			&match.ID,
+			&match.HomeTeamID,
+			&match.AwayTeamID,
+			&match.HomeGoals,
+			&match.AwayGoals,
+			&match.Week,
+			&match.Played,
+		); err != nil {
+			return nil, err
+		}
+		matches = append(matches, match)
+	}
+	return matches, nil
 }

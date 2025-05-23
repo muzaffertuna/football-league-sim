@@ -25,37 +25,47 @@ definitions:
       id:
         type: integer
       played:
-        description: Maç oynandı mı?
         type: boolean
       week:
-        description: Maçın oynandığı hafta
         type: integer
     type: object
   models.Team:
     properties:
       goals_against:
-        description: Yediği goller
         type: integer
       goals_for:
-        description: Attığı goller
         type: integer
       id:
         type: integer
       matches_played:
-        description: Oynadığı maç sayısı
         type: integer
       name:
         type: string
       points:
-        description: Puan
         type: integer
       strength:
-        description: Takım gücü (1-100)
         type: integer
     type: object
 info:
   contact: {}
 paths:
+  /fixture:
+    get:
+      description: Ligin tüm maç fikstürünü döndürür
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.League'
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Tüm maç fikstürünü getirir
+      tags:
+      - league
   /league-table:
     get:
       description: Mevcut lig tablosunu puan sırasına göre döndürür
@@ -75,13 +85,7 @@ paths:
       - league
   /play-week:
     post:
-      description: Belirtilen hafta için maçları simüle eder ve ligi günceller
-      parameters:
-      - description: Hafta numarası
-        in: query
-        name: week
-        required: true
-        type: integer
+      description: Ligin güncel haftasını simüle eder ve ligi günceller
       produces:
       - text/plain
       responses:
@@ -89,15 +93,11 @@ paths:
           description: Week played successfully
           schema:
             type: string
-        "400":
-          description: Invalid week parameter
-          schema:
-            type: string
         "500":
           description: Internal server error
           schema:
             type: string
-      summary: Belirli bir haftayı oynatır
+      summary: Mevcut haftayı oynatır
       tags:
       - league
   /reset-league:

@@ -4,6 +4,32 @@
         "contact": {}
     },
     "paths": {
+        "/fixture": {
+            "get": {
+                "description": "Ligin tüm maç fikstürünü döndürür",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "league"
+                ],
+                "summary": "Tüm maç fikstürünü getirir",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.League"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/league-table": {
             "get": {
                 "description": "Mevcut lig tablosunu puan sırasına göre döndürür",
@@ -32,32 +58,17 @@
         },
         "/play-week": {
             "post": {
-                "description": "Belirtilen hafta için maçları simüle eder ve ligi günceller",
+                "description": "Ligin güncel haftasını simüle eder ve ligi günceller",
                 "produces": [
                     "text/plain"
                 ],
                 "tags": [
                     "league"
                 ],
-                "summary": "Belirli bir haftayı oynatır",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "Hafta numarası",
-                        "name": "week",
-                        "in": "query",
-                        "required": true
-                    }
-                ],
+                "summary": "Mevcut haftayı oynatır",
                 "responses": {
                     "200": {
                         "description": "Week played successfully",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid week parameter",
                         "schema": {
                             "type": "string"
                         }
@@ -138,11 +149,9 @@
                     "type": "integer"
                 },
                 "played": {
-                    "description": "Maç oynandı mı?",
                     "type": "boolean"
                 },
                 "week": {
-                    "description": "Maçın oynandığı hafta",
                     "type": "integer"
                 }
             }
@@ -151,29 +160,24 @@
             "type": "object",
             "properties": {
                 "goals_against": {
-                    "description": "Yediği goller",
                     "type": "integer"
                 },
                 "goals_for": {
-                    "description": "Attığı goller",
                     "type": "integer"
                 },
                 "id": {
                     "type": "integer"
                 },
                 "matches_played": {
-                    "description": "Oynadığı maç sayısı",
                     "type": "integer"
                 },
                 "name": {
                     "type": "string"
                 },
                 "points": {
-                    "description": "Puan",
                     "type": "integer"
                 },
                 "strength": {
-                    "description": "Takım gücü (1-100)",
                     "type": "integer"
                 }
             }

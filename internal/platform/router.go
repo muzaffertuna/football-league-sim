@@ -21,6 +21,7 @@ func NewRouter(leagueHandler LeagueHandler) http.Handler {
 	r.Get("/league-table", leagueHandler.GetLeagueTable)
 	r.Post("/play-week", leagueHandler.PlayWeek)
 	r.Post("/reset-league", leagueHandler.ResetLeague)
+	r.Get("/fixture", leagueHandler.GetFixture)
 
 	return r
 }

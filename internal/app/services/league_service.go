@@ -1,6 +1,7 @@
 package services
 
 import (
+	"fmt"
 	"sort"
 
 	"github.com/muzaffertuna/football-league-sim/internal/app/models"
@@ -25,7 +26,18 @@ func (s *leagueService) PlayWeek(week int) error {
 		return err
 	}
 
+	if len(matches) == 0 {
+		return fmt.Errorf("no matches found for week %d", week)
+	}
+
 	for _, match := range matches {
+		if match.Played {
+			return fmt.Errorf("week %d has already been played", week)
+		}
+	}
+
+	for i := range matches {
+		match := &matches[i]
 		if match.Played {
 			continue
 		}
@@ -39,7 +51,7 @@ func (s *leagueService) PlayWeek(week int) error {
 			return err
 		}
 
-		if err := s.matchSvc.SimulateMatch(&match, homeTeam, awayTeam); err != nil {
+		if err := s.matchSvc.SimulateMatch(match, homeTeam, awayTeam); err != nil {
 			return err
 		}
 	}
@@ -87,11 +99,75 @@ func (s *leagueService) ResetLeague() error {
 		}
 	}
 
+	if err := s.matchRepo.DeleteAllMatches(); err != nil {
+		return err
+	}
+
 	league, err := s.leagueRepo.GetLeague()
 	if err != nil {
 		return err
 	}
 	league.CurrentWeek = 1
 	league.Matches = nil
+
+	if err := s.generateMatches(teams); err != nil {
+		return err
+	}
+
 	return s.leagueRepo.SaveLeague(league)
+}
+
+func (s *leagueService) generateMatches(teams []models.Team) error {
+	if len(teams) != 4 {
+		return fmt.Errorf("expected 4 teams, got %d", len(teams))
+	}
+
+	// 4 takım için round-robin fikstürü: 6 maç (ilk yarı) + 6 maç (rövanş) = 12 maç
+	// Her hafta 2 maç, toplam 6 hafta
+	matches := []struct {
+		homeTeamID int
+		awayTeamID int
+		week       int
+	}{
+		// 1. Hafta
+		{teams[0].ID, teams[1].ID, 1},
+		{teams[2].ID, teams[3].ID, 1},
+		// 2. Hafta
+		{teams[0].ID, teams[2].ID, 2},
+		{teams[1].ID, teams[3].ID, 2},
+		// 3. Hafta
+		{teams[0].ID, teams[3].ID, 3},
+		{teams[1].ID, teams[2].ID, 3},
+		// 4. Hafta (rövanşlar)
+		{teams[1].ID, teams[0].ID, 4},
+		{teams[3].ID, teams[2].ID, 4},
+		// 5. Hafta
+		{teams[2].ID, teams[0].ID, 5},
+		{teams[3].ID, teams[1].ID, 5},
+		// 6. Hafta
+		{teams[3].ID, teams[0].ID, 6},
+		{teams[2].ID, teams[1].ID, 6},
+	}
+
+	for _, m := range matches {
+		match := &models.Match{
+			HomeTeamID: m.homeTeamID,
+			AwayTeamID: m.awayTeamID,
+			Week:       m.week,
+			Played:     false,
+		}
+		if err := s.matchRepo.CreateMatch(match); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *leagueService) GetMatchesByWeek(week int) ([]models.Match, error) {
+	return s.matchRepo.GetMatchesByWeek(week)
+}
+
+func (s *leagueService) GetTeamByID(id int) (*models.Team, error) {
+	return s.teamSvc.GetTeamByID(id)
 }
