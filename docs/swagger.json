@@ -1,0 +1,182 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": {
+        "/league-table": {
+            "get": {
+                "description": "Mevcut lig tablosunu puan sırasına göre döndürür",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "league"
+                ],
+                "summary": "Lig tablosunu getirir",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/models.League"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/play-week": {
+            "post": {
+                "description": "Belirtilen hafta için maçları simüle eder ve ligi günceller",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "league"
+                ],
+                "summary": "Belirli bir haftayı oynatır",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Hafta numarası",
+                        "name": "week",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Week played successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid week parameter",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "/reset-league": {
+            "post": {
+                "description": "Tüm takımları ve maçları sıfırlayarak ligi yeniden başlatır",
+                "produces": [
+                    "text/plain"
+                ],
+                "tags": [
+                    "league"
+                ],
+                "summary": "Ligi sıfırlar",
+                "responses": {
+                    "200": {
+                        "description": "League reset successfully",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "models.League": {
+            "type": "object",
+            "properties": {
+                "current_week": {
+                    "type": "integer"
+                },
+                "matches": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Match"
+                    }
+                },
+                "teams": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Team"
+                    }
+                }
+            }
+        },
+        "models.Match": {
+            "type": "object",
+            "properties": {
+                "away_goals": {
+                    "type": "integer"
+                },
+                "away_team_id": {
+                    "type": "integer"
+                },
+                "home_goals": {
+                    "type": "integer"
+                },
+                "home_team_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "played": {
+                    "description": "Maç oynandı mı?",
+                    "type": "boolean"
+                },
+                "week": {
+                    "description": "Maçın oynandığı hafta",
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Team": {
+            "type": "object",
+            "properties": {
+                "goals_against": {
+                    "description": "Yediği goller",
+                    "type": "integer"
+                },
+                "goals_for": {
+                    "description": "Attığı goller",
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "matches_played": {
+                    "description": "Oynadığı maç sayısı",
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "points": {
+                    "description": "Puan",
+                    "type": "integer"
+                },
+                "strength": {
+                    "description": "Takım gücü (1-100)",
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

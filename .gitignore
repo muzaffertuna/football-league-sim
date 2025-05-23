@@ -1,0 +1,31 @@
+# Environment variables
+*.env
+
+# Go-specific ignores
+/vendor/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Build artifacts
+/bin/
+/dist/
+*.test
+*.out
+
+# Editor and IDE files
+.idea/
+*.swp
+*~
+.vscode/
+
+# Logs
+*.log
+
+# Dependency directories
+/tmp/
+
+# Swagger generated files (optional, if you regenerate them)
+/docs/docs.go
