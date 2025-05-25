@@ -8,6 +8,9 @@ type Team struct {
 	GoalsFor      int    `json:"goals_for"`
 	GoalsAgainst  int    `json:"goals_against"`
 	MatchesPlayed int    `json:"matches_played"`
+	Wins          int    `json:"wins"`  // Yeni eklendi
+	Draws         int    `json:"draws"` // Yeni eklendi
+	Loses         int    `json:"loses"` // Yeni eklendi
 }
 
 func (t *Team) GoalDifference() int {

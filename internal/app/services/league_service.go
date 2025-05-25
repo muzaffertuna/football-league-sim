@@ -54,6 +54,26 @@ func (s *leagueService) PlayWeek(week int) error {
 		if err := s.matchSvc.SimulateMatch(match, homeTeam, awayTeam); err != nil {
 			return err
 		}
+
+		// Maç sonucuna göre takım istatistiklerini güncelle
+		if match.HomeGoals > match.AwayGoals {
+			homeTeam.Wins++
+			awayTeam.Loses++
+		} else if match.HomeGoals < match.AwayGoals {
+			homeTeam.Loses++
+			awayTeam.Wins++
+		} else {
+			homeTeam.Draws++
+			awayTeam.Draws++
+		}
+
+		// Takımların güncellenmiş hallerini kaydet
+		if err := s.teamRepo.UpdateTeam(homeTeam); err != nil {
+			return err
+		}
+		if err := s.teamRepo.UpdateTeam(awayTeam); err != nil {
+			return err
+		}
 	}
 
 	league, err := s.leagueRepo.GetLeague()
@@ -94,6 +114,9 @@ func (s *leagueService) ResetLeague() error {
 		team.GoalsFor = 0
 		team.GoalsAgainst = 0
 		team.MatchesPlayed = 0
+		team.Wins = 0  // Yeni eklendi
+		team.Draws = 0 // Yeni eklendi
+		team.Loses = 0 // Yeni eklendi
 		if err := s.teamRepo.UpdateTeam(&team); err != nil {
 			return err
 		}

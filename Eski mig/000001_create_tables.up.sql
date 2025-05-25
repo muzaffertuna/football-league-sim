@@ -6,10 +6,7 @@ CREATE TABLE Teams (
     Points INT DEFAULT 0,
     GoalsFor INT DEFAULT 0,
     GoalsAgainst INT DEFAULT 0,
-    MatchesPlayed INT DEFAULT 0,
-    Wins INT NOT NULL DEFAULT 0,   -- Yeni eklendi
-    Draws INT NOT NULL DEFAULT 0,  -- Yeni eklendi
-    Loses INT NOT NULL DEFAULT 0   -- Yeni eklendi
+    MatchesPlayed INT DEFAULT 0
 );
 
 -- Matches tablosu
@@ -25,22 +22,13 @@ CREATE TABLE Matches (
     FOREIGN KEY (AwayTeamID) REFERENCES Teams(ID)
 );
 
--- League tablosu (Eğer varsa ve projeniz için önemliyse ekleyin, kodunuzda leagueRepo kullandığınız için muhtemelen vardır.)
--- Örnek:
--- CREATE TABLE League (
---     ID INT IDENTITY(1,1) PRIMARY KEY,
---     CurrentWeek INT NOT NULL DEFAULT 1
--- );
--- INSERT INTO League (CurrentWeek) VALUES (1);
-
-
 -- Örnek takımlar
-INSERT INTO Teams (Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed, Wins, Draws, Loses)
-VALUES
-    ('Arsenal', 85, 0, 0, 0, 0, 0, 0, 0),
-    ('Chelsea', 80, 0, 0, 0, 0, 0, 0, 0),
-    ('Liverpool', 90, 0, 0, 0, 0, 0, 0, 0),
-    ('Manchester United', 75, 0, 0, 0, 0, 0, 0, 0);
+INSERT INTO Teams (Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed)
+VALUES 
+    ('Arsenal', 85, 0, 0, 0, 0),
+    ('Chelsea', 80, 0, 0, 0, 0),
+    ('Liverpool', 90, 0, 0, 0, 0),
+    ('Manchester United', 75, 0, 0, 0, 0);
 
 -- Maç programı (4 takım, her biri diğerleriyle 2 kez oynar, toplam 12 maç, 6 hafta)
 INSERT INTO Matches (HomeTeamID, AwayTeamID, Week, Played) VALUES (1, 2, 1, 0); -- Arsenal vs Chelsea

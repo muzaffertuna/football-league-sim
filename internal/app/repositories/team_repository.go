@@ -17,9 +17,9 @@ func NewTeamRepository(db *database.DB) TeamRepository {
 
 func (r *teamRepository) CreateTeam(team *models.Team) error {
 	query := `
-        INSERT INTO Teams (Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed)
-        VALUES (@p1, @p2, @p3, @p4, @p5, @p6);
-        SELECT SCOPE_IDENTITY();`
+		INSERT INTO Teams (Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed, Wins, Draws, Loses)
+		VALUES (@p1, @p2, @p3, @p4, @p5, @p6, @p7, @p8, @p9);
+		SELECT SCOPE_IDENTITY();`
 	var id int
 	err := r.db.QueryRow(query,
 		sql.Named("p1", team.Name),
@@ -28,6 +28,9 @@ func (r *teamRepository) CreateTeam(team *models.Team) error {
 		sql.Named("p4", team.GoalsFor),
 		sql.Named("p5", team.GoalsAgainst),
 		sql.Named("p6", team.MatchesPlayed),
+		sql.Named("p7", team.Wins),  // Yeni eklendi
+		sql.Named("p8", team.Draws), // Yeni eklendi
+		sql.Named("p9", team.Loses), // Yeni eklendi
 	).Scan(&id)
 	if err != nil {
 		return err
@@ -38,9 +41,9 @@ func (r *teamRepository) CreateTeam(team *models.Team) error {
 
 func (r *teamRepository) GetTeamByID(id int) (*models.Team, error) {
 	query := `
-        SELECT ID, Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed
-        FROM Teams
-        WHERE ID = @p1`
+		SELECT ID, Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed, Wins, Draws, Loses
+		FROM Teams
+		WHERE ID = @p1`
 	team := &models.Team{}
 	err := r.db.QueryRow(query, sql.Named("p1", id)).Scan(
 		&team.ID,
@@ -50,6 +53,9 @@ func (r *teamRepository) GetTeamByID(id int) (*models.Team, error) {
 		&team.GoalsFor,
 		&team.GoalsAgainst,
 		&team.MatchesPlayed,
+		&team.Wins,  // Yeni eklendi
+		&team.Draws, // Yeni eklendi
+		&team.Loses, // Yeni eklendi
 	)
 	if err == sql.ErrNoRows {
 		return nil, nil
@@ -62,8 +68,8 @@ func (r *teamRepository) GetTeamByID(id int) (*models.Team, error) {
 
 func (r *teamRepository) GetAllTeams() ([]models.Team, error) {
 	query := `
-        SELECT ID, Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed
-        FROM Teams`
+		SELECT ID, Name, Strength, Points, GoalsFor, GoalsAgainst, MatchesPlayed, Wins, Draws, Loses
+		FROM Teams`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
@@ -81,6 +87,9 @@ func (r *teamRepository) GetAllTeams() ([]models.Team, error) {
 			&team.GoalsFor,
 			&team.GoalsAgainst,
 			&team.MatchesPlayed,
+			&team.Wins,  // Yeni eklendi
+			&team.Draws, // Yeni eklendi
+			&team.Loses, // Yeni eklendi
 		); err != nil {
 			return nil, err
 		}
@@ -91,9 +100,9 @@ func (r *teamRepository) GetAllTeams() ([]models.Team, error) {
 
 func (r *teamRepository) UpdateTeam(team *models.Team) error {
 	query := `
-        UPDATE Teams
-        SET Name = @p1, Strength = @p2, Points = @p3, GoalsFor = @p4, GoalsAgainst = @p5, MatchesPlayed = @p6
-        WHERE ID = @p7`
+		UPDATE Teams
+		SET Name = @p1, Strength = @p2, Points = @p3, GoalsFor = @p4, GoalsAgainst = @p5, MatchesPlayed = @p6, Wins = @p7, Draws = @p8, Loses = @p9
+		WHERE ID = @p10`
 	_, err := r.db.Exec(query,
 		sql.Named("p1", team.Name),
 		sql.Named("p2", team.Strength),
@@ -101,7 +110,10 @@ func (r *teamRepository) UpdateTeam(team *models.Team) error {
 		sql.Named("p4", team.GoalsFor),
 		sql.Named("p5", team.GoalsAgainst),
 		sql.Named("p6", team.MatchesPlayed),
-		sql.Named("p7", team.ID),
+		sql.Named("p7", team.Wins),  // Yeni eklendi
+		sql.Named("p8", team.Draws), // Yeni eklendi
+		sql.Named("p9", team.Loses), // Yeni eklendi
+		sql.Named("p10", team.ID),
 	)
 	return err
 }
