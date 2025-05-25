@@ -16,6 +16,8 @@ type MatchRepository interface {
 	UpdateMatch(match *models.Match) error
 	DeleteAllMatches() error // Yeni metod
 	GetAllMatches() ([]models.Match, error)
+	GetPlayedMatches() ([]models.Match, error) // Zaten vardı, bu metot kullanılacak
+	GetMaxWeekPlayed() (int, error)            // YENİ: En yüksek oynanmış haftayı döndürür
 }
 
 type LeagueRepository interface {

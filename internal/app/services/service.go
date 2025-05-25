@@ -20,4 +20,5 @@ type LeagueService interface {
 	ResetLeague() error
 	GetMatchesByWeek(week int) ([]models.Match, error) // Yeni metod
 	GetTeamByID(id int) (*models.Team, error)          // Yeni metod
+	GetCurrentWeek() (int, error)                      // Yeni metot
 }

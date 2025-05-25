@@ -68,12 +68,19 @@ func main() {
 	// Repository'leri oluştur
 	teamRepo := repositories.NewTeamRepository(db)
 	matchRepo := repositories.NewMatchRepository(db)
-	leagueRepo := repositories.NewLeagueRepository(teamRepo, matchRepo)
+	// leagueRepo := repositories.NewLeagueRepository(teamRepo, matchRepo) // Bu satır artık kullanılmıyor ve yorum satırı yapılmalı veya silinmeli
 
 	// Servisleri oluştur
 	teamSvc := services.NewTeamService(teamRepo)
 	matchSvc := services.NewMatchService(matchRepo, teamRepo)
-	leagueSvc := services.NewLeagueService(leagueRepo, matchRepo, matchSvc, teamRepo, teamSvc)
+
+	// SADECE BU KISIM GÜNCELLENDİ:
+	// services.NewLeagueService artık leagueRepo almıyor ve bir hata döndürüyor.
+	leagueSvc, err := services.NewLeagueService(matchRepo, matchSvc, teamRepo, teamSvc)
+	if err != nil {
+		logger.Error("Failed to initialize league service: " + err.Error())
+		return
+	}
 
 	// Handler'ları oluştur
 	leagueHandler := handlers.NewLeagueHandler(leagueSvc, logger)

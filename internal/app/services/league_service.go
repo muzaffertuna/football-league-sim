@@ -9,18 +9,80 @@ import (
 )
 
 type leagueService struct {
-	leagueRepo repositories.LeagueRepository
-	matchRepo  repositories.MatchRepository
-	matchSvc   MatchService
-	teamRepo   repositories.TeamRepository
-	teamSvc    TeamService
+	// leagueRepo repositories.LeagueRepository // Artık doğrudan League tablosu kullanmadığımız için kaldırıldı
+	matchRepo   repositories.MatchRepository
+	matchSvc    MatchService
+	teamRepo    repositories.TeamRepository
+	teamSvc     TeamService
+	currentWeek int // Ligin güncel haftasını tutacak alan
 }
 
-func NewLeagueService(leagueRepo repositories.LeagueRepository, matchRepo repositories.MatchRepository, matchSvc MatchService, teamRepo repositories.TeamRepository, teamSvc TeamService) LeagueService {
-	return &leagueService{leagueRepo: leagueRepo, matchRepo: matchRepo, matchSvc: matchSvc, teamRepo: teamRepo, teamSvc: teamSvc}
+// NewLeagueService Constructor'ı güncellendi ve başlangıç haftası hesaplaması eklendi
+func NewLeagueService(matchRepo repositories.MatchRepository, matchSvc MatchService, teamRepo repositories.TeamRepository, teamSvc TeamService) (LeagueService, error) {
+	ls := &leagueService{
+		matchRepo: matchRepo,
+		matchSvc:  matchSvc,
+		teamRepo:  teamRepo,
+		teamSvc:   teamSvc,
+	}
+
+	// Uygulama başladığında CurrentWeek'i hesapla
+	err := ls.initializeCurrentWeek()
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialize current week: %w", err)
+	}
+
+	return ls, nil
+}
+
+// initializeCurrentWeek başlangıçta mevcut haftayı hesaplar ve s.currentWeek'e atar
+func (s *leagueService) initializeCurrentWeek() error {
+	maxPlayedWeek, err := s.matchRepo.GetMaxWeekPlayed()
+	if err != nil {
+		return err
+	}
+
+	// Eğer hiç maç oynanmamışsa, CurrentWeek 1'dir.
+	if maxPlayedWeek == 0 {
+		s.currentWeek = 1
+		return nil
+	}
+
+	// maxPlayedWeek'teki tüm maçların oynanıp oynanmadığını kontrol et
+	matchesInMaxWeek, err := s.matchRepo.GetMatchesByWeek(maxPlayedWeek)
+	if err != nil {
+		return err
+	}
+
+	allPlayedInMaxWeek := true
+	for _, match := range matchesInMaxWeek {
+		if !match.Played {
+			allPlayedInMaxWeek = false
+			break
+		}
+	}
+
+	if allPlayedInMaxWeek {
+		// Eğer en yüksek haftadaki tüm maçlar oynandıysa, bir sonraki haftaya geç.
+		s.currentWeek = maxPlayedWeek + 1
+	} else {
+		// Aksi takdirde, hala en yüksek haftadayız.
+		s.currentWeek = maxPlayedWeek
+	}
+	return nil
+}
+
+// GetCurrentWeek ligin güncel haftasını döndürür
+func (s *leagueService) GetCurrentWeek() (int, error) {
+	return s.currentWeek, nil
 }
 
 func (s *leagueService) PlayWeek(week int) error {
+	// Doğrudan servis içindeki currentWeek'i kullan
+	if week != s.currentWeek {
+		return fmt.Errorf("it's not week %d, current week is %d", week, s.currentWeek)
+	}
+
 	matches, err := s.matchRepo.GetMatchesByWeek(week)
 	if err != nil {
 		return err
@@ -32,12 +94,15 @@ func (s *leagueService) PlayWeek(week int) error {
 
 	for _, match := range matches {
 		if match.Played {
+			// Bu kontrol aslında yukarıdaki 'week != s.currentWeek' ile kısmen ele alınıyor
+			// Ancak emin olmak için bırakılabilir veya kaldırılabilir.
 			return fmt.Errorf("week %d has already been played", week)
 		}
 	}
 
 	for i := range matches {
 		match := &matches[i]
+		// Maç zaten oynandıysa döngüyü atla
 		if match.Played {
 			continue
 		}
@@ -76,29 +141,41 @@ func (s *leagueService) PlayWeek(week int) error {
 		}
 	}
 
-	league, err := s.leagueRepo.GetLeague()
-	if err != nil {
-		return err
-	}
-	league.CurrentWeek = week + 1
-	return s.leagueRepo.SaveLeague(league)
+	// Haftayı başarıyla oynadıktan sonra currentWeek'i bir artır
+	s.currentWeek = week + 1
+	return nil
 }
 
 func (s *leagueService) GetLeagueTable() (*models.League, error) {
-	league, err := s.leagueRepo.GetLeague()
+	// Takımları al
+	teams, err := s.teamSvc.GetAllTeams()
 	if err != nil {
 		return nil, err
 	}
 
-	sort.Slice(league.Teams, func(i, j int) bool {
-		if league.Teams[i].Points != league.Teams[j].Points {
-			return league.Teams[i].Points > league.Teams[j].Points
+	// Maçları al (opsiyonel, eğer League modelinde maçları da göstermek istiyorsan)
+	// CurrentWeek'i burada doğrudan league.CurrentWeek'e atayabiliriz
+	allMatches, err := s.matchRepo.GetAllMatches()
+	if err != nil {
+		return nil, err
+	}
+
+	sort.Slice(teams, func(i, j int) bool {
+		if teams[i].Points != teams[j].Points {
+			return teams[i].Points > teams[j].Points
 		}
-		if league.Teams[i].GoalDifference() != league.Teams[j].GoalDifference() {
-			return league.Teams[i].GoalDifference() > league.Teams[j].GoalDifference()
+		if teams[i].GoalDifference() != teams[j].GoalDifference() {
+			return teams[i].GoalDifference() > teams[j].GoalDifference()
 		}
-		return league.Teams[i].GoalsFor > league.Teams[j].GoalsFor
+		return teams[i].GoalsFor > teams[j].GoalsFor
 	})
+
+	league := &models.League{
+		Teams:   teams,
+		Matches: allMatches,
+		// CurrentWeek'i buradan set ediyoruz
+		CurrentWeek: s.currentWeek,
+	}
 
 	return league, nil
 }
@@ -114,9 +191,9 @@ func (s *leagueService) ResetLeague() error {
 		team.GoalsFor = 0
 		team.GoalsAgainst = 0
 		team.MatchesPlayed = 0
-		team.Wins = 0  // Yeni eklendi
-		team.Draws = 0 // Yeni eklendi
-		team.Loses = 0 // Yeni eklendi
+		team.Wins = 0
+		team.Draws = 0
+		team.Loses = 0
 		if err := s.teamRepo.UpdateTeam(&team); err != nil {
 			return err
 		}
@@ -126,18 +203,13 @@ func (s *leagueService) ResetLeague() error {
 		return err
 	}
 
-	league, err := s.leagueRepo.GetLeague()
-	if err != nil {
-		return err
-	}
-	league.CurrentWeek = 1
-	league.Matches = nil
-
 	if err := s.generateMatches(teams); err != nil {
 		return err
 	}
 
-	return s.leagueRepo.SaveLeague(league)
+	// Ligi sıfırladıktan sonra currentWeek'i 1'e geri getir
+	s.currentWeek = 1
+	return nil
 }
 
 func (s *leagueService) generateMatches(teams []models.Team) error {
@@ -145,29 +217,21 @@ func (s *leagueService) generateMatches(teams []models.Team) error {
 		return fmt.Errorf("expected 4 teams, got %d", len(teams))
 	}
 
-	// 4 takım için round-robin fikstürü: 6 maç (ilk yarı) + 6 maç (rövanş) = 12 maç
-	// Her hafta 2 maç, toplam 6 hafta
 	matches := []struct {
 		homeTeamID int
 		awayTeamID int
 		week       int
 	}{
-		// 1. Hafta
 		{teams[0].ID, teams[1].ID, 1},
 		{teams[2].ID, teams[3].ID, 1},
-		// 2. Hafta
 		{teams[0].ID, teams[2].ID, 2},
 		{teams[1].ID, teams[3].ID, 2},
-		// 3. Hafta
 		{teams[0].ID, teams[3].ID, 3},
 		{teams[1].ID, teams[2].ID, 3},
-		// 4. Hafta (rövanşlar)
 		{teams[1].ID, teams[0].ID, 4},
 		{teams[3].ID, teams[2].ID, 4},
-		// 5. Hafta
 		{teams[2].ID, teams[0].ID, 5},
 		{teams[3].ID, teams[1].ID, 5},
-		// 6. Hafta
 		{teams[3].ID, teams[0].ID, 6},
 		{teams[2].ID, teams[1].ID, 6},
 	}
