@@ -15,6 +15,7 @@ import (
 	"github.com/muzaffertuna/football-league-sim/internal/app/repositories"
 	"github.com/muzaffertuna/football-league-sim/internal/app/services"
 	"github.com/muzaffertuna/football-league-sim/internal/database"
+	"github.com/muzaffertuna/football-league-sim/internal/pkg/logger"
 	"github.com/muzaffertuna/football-league-sim/internal/platform"
 )
 
@@ -46,7 +47,7 @@ func runMigrations(db *sql.DB, dbURL string) error {
 
 func main() {
 	// Logger'ı oluştur
-	logger := platform.NewLogger()
+	logger := logger.NewLogger()
 
 	// Config'i yükle
 	cfg := config.LoadConfig()

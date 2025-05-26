@@ -31,11 +31,17 @@ definitions:
     type: object
   models.Team:
     properties:
+      draws:
+        description: Yeni eklendi
+        type: integer
       goals_against:
         type: integer
       goals_for:
         type: integer
       id:
+        type: integer
+      loses:
+        description: Yeni eklendi
         type: integer
       matches_played:
         type: integer
@@ -44,6 +50,9 @@ definitions:
       points:
         type: integer
       strength:
+        type: integer
+      wins:
+        description: Yeni eklendi
         type: integer
     type: object
 info:
@@ -115,6 +124,26 @@ paths:
           schema:
             type: string
       summary: Ligi sıfırlar
+      tags:
+      - league
+  /simulate-all-weeks:
+    post:
+      description: Ligdeki kalan tüm haftaları otomatik olarak simüle eder ve sonuçları
+        döndürür
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Tüm simüle edilmiş maçların sonuçları
+          schema:
+            items:
+              $ref: '#/definitions/models.Match'
+            type: array
+        "500":
+          description: Internal server error
+          schema:
+            type: string
+      summary: Tüm ligi simüle eder
       tags:
       - league
 swagger: "2.0"

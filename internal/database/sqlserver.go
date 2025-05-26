@@ -5,15 +5,15 @@ import (
 	"fmt"
 
 	_ "github.com/microsoft/go-mssqldb"
-	"github.com/muzaffertuna/football-league-sim/internal/platform"
+	"github.com/muzaffertuna/football-league-sim/internal/pkg/logger"
 )
 
 type DB struct {
 	*sql.DB
-	logger *platform.Logger
+	logger *logger.Logger
 }
 
-func ConnectMSSQL(connectionString string, logger *platform.Logger) (*DB, error) {
+func ConnectMSSQL(connectionString string, logger *logger.Logger) (*DB, error) {
 	db, err := sql.Open("sqlserver", connectionString)
 	if err != nil {
 		logger.Error(fmt.Sprintf("failed to connect to MSSQL: %v", err))

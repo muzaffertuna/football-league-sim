@@ -21,4 +21,5 @@ type LeagueService interface {
 	GetMatchesByWeek(week int) ([]models.Match, error) // Yeni metod
 	GetTeamByID(id int) (*models.Team, error)          // Yeni metod
 	GetCurrentWeek() (int, error)                      // Yeni metot
+	SimulateAllWeeks() ([]models.Match, error)         // YENİ EKLENEN METOD
 }

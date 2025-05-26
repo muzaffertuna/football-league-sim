@@ -9,7 +9,6 @@ import (
 )
 
 type leagueService struct {
-	// leagueRepo repositories.LeagueRepository // Artık doğrudan League tablosu kullanmadığımız için kaldırıldı
 	matchRepo   repositories.MatchRepository
 	matchSvc    MatchService
 	teamRepo    repositories.TeamRepository
@@ -78,7 +77,6 @@ func (s *leagueService) GetCurrentWeek() (int, error) {
 }
 
 func (s *leagueService) PlayWeek(week int) error {
-	// Doğrudan servis içindeki currentWeek'i kullan
 	if week != s.currentWeek {
 		return fmt.Errorf("it's not week %d, current week is %d", week, s.currentWeek)
 	}
@@ -92,17 +90,18 @@ func (s *leagueService) PlayWeek(week int) error {
 		return fmt.Errorf("no matches found for week %d", week)
 	}
 
-	for _, match := range matches {
-		if match.Played {
-			// Bu kontrol aslında yukarıdaki 'week != s.currentWeek' ile kısmen ele alınıyor
-			// Ancak emin olmak için bırakılabilir veya kaldırılabilir.
-			return fmt.Errorf("week %d has already been played", week)
-		}
-	}
+	// Bu döngüye gerek kalmadı çünkü initializeCurrentWeek ve currentWeek mantığı ile
+	// zaten oynanmış bir haftayı tekrar oynamaya çalışmamalıyız.
+	// for _, match := range matches {
+	// 	if match.Played {
+	// 		return fmt.Errorf("week %d has already been played", week)
+	// 	}
+	// }
 
 	for i := range matches {
 		match := &matches[i]
-		// Maç zaten oynandıysa döngüyü atla
+		// MatchService'in zaten oynanmış maçları atladığı varsayılır.
+		// Ancak defensive programlama için burada da bir kontrol tutulabilir.
 		if match.Played {
 			continue
 		}
@@ -116,34 +115,61 @@ func (s *leagueService) PlayWeek(week int) error {
 			return err
 		}
 
+		// BURADA SADECE MAÇI SİMÜLE ETMEK ÇAĞRILIR.
+		// Takım istatistikleri (MatchesPlayed, GoalsFor, GoalsAgainst, Points, Wins, Draws, Loses)
+		// SimulateMatch fonksiyonu içinde güncellenecektir.
 		if err := s.matchSvc.SimulateMatch(match, homeTeam, awayTeam); err != nil {
 			return err
 		}
-
-		// Maç sonucuna göre takım istatistiklerini güncelle
-		if match.HomeGoals > match.AwayGoals {
-			homeTeam.Wins++
-			awayTeam.Loses++
-		} else if match.HomeGoals < match.AwayGoals {
-			homeTeam.Loses++
-			awayTeam.Wins++
-		} else {
-			homeTeam.Draws++
-			awayTeam.Draws++
-		}
-
-		// Takımların güncellenmiş hallerini kaydet
-		if err := s.teamRepo.UpdateTeam(homeTeam); err != nil {
-			return err
-		}
-		if err := s.teamRepo.UpdateTeam(awayTeam); err != nil {
-			return err
-		}
+		// Takımları güncelleme çağrılarına burada gerek yok, SimulateMatch içinde yapılıyor.
 	}
 
 	// Haftayı başarıyla oynadıktan sonra currentWeek'i bir artır
 	s.currentWeek = week + 1
 	return nil
+}
+
+// SimulateAllWeeks ligdeki kalan tüm haftaları sırayla simüle eder.
+func (s *leagueService) SimulateAllWeeks() ([]models.Match, error) {
+	var allSimulatedMatches []models.Match
+	const totalWeeks = 6 // Ligi tamamlamak için gereken hafta sayısı (sabit varsayalım)
+
+	// Ligin mevcut haftasından başla
+	currentWeek, err := s.GetCurrentWeek()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get current week: %w", err)
+	}
+
+	// Eğer lig zaten bitmişse, tüm maçları döndür
+	if currentWeek > totalWeeks {
+		allMatches, err := s.matchRepo.GetAllMatches()
+		if err != nil {
+			return nil, err
+		}
+		// Zaten bitmişse hata döndürmek yerine bilgilendirme mesajı verilebilir.
+		return allMatches, fmt.Errorf("league has already completed. current week: %d", currentWeek)
+	}
+
+	for week := currentWeek; week <= totalWeeks; week++ {
+		// PlayWeek metodunu çağırarak mevcut haftayı oynat
+		err := s.PlayWeek(week)
+		if err != nil {
+			// Eğer haftanın oynanmasıyla ilgili bir hata olursa, dur ve hatayı döndür
+			return nil, fmt.Errorf("failed to play week %d: %w", week, err)
+		}
+
+		// Oynanan haftanın maçlarını al ve genel listeye ekle
+		playedMatches, err := s.matchRepo.GetMatchesByWeek(week)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get matches for played week %d: %w", week, err)
+		}
+		allSimulatedMatches = append(allSimulatedMatches, playedMatches...)
+
+		// İsteğe bağlı: Her hafta arasında kısa bir duraklama ekleyebilirsiniz.
+		// time.Sleep(50 * time.Millisecond)
+	}
+
+	return allSimulatedMatches, nil
 }
 
 func (s *leagueService) GetLeagueTable() (*models.League, error) {
@@ -154,7 +180,6 @@ func (s *leagueService) GetLeagueTable() (*models.League, error) {
 	}
 
 	// Maçları al (opsiyonel, eğer League modelinde maçları da göstermek istiyorsan)
-	// CurrentWeek'i burada doğrudan league.CurrentWeek'e atayabiliriz
 	allMatches, err := s.matchRepo.GetAllMatches()
 	if err != nil {
 		return nil, err
@@ -171,10 +196,9 @@ func (s *leagueService) GetLeagueTable() (*models.League, error) {
 	})
 
 	league := &models.League{
-		Teams:   teams,
-		Matches: allMatches,
-		// CurrentWeek'i buradan set ediyoruz
-		CurrentWeek: s.currentWeek,
+		Teams:       teams,
+		Matches:     allMatches,
+		CurrentWeek: s.currentWeek, // CurrentWeek'i buradan set ediyoruz
 	}
 
 	return league, nil
@@ -257,4 +281,17 @@ func (s *leagueService) GetMatchesByWeek(week int) ([]models.Match, error) {
 
 func (s *leagueService) GetTeamByID(id int) (*models.Team, error) {
 	return s.teamSvc.GetTeamByID(id)
+}
+
+// calculatePoints fonksiyonu artık doğrudan puanları hesapladığı için eski şekilde eklenmiyor.
+// PlayWeek içinde doğrudan galibiyete 3, beraberliğe 1 puan ekleniyor.
+// Bu fonksiyonu başka bir yerde kullanmıyorsanız silebilirsiniz.
+func calculatePoints(homeGoals, awayGoals int) int {
+	if homeGoals > awayGoals {
+		return 3 // Galibiyet
+	} else if homeGoals == awayGoals {
+		return 1 // Beraberlik
+	} else {
+		return 0 // Mağlubiyet
+	}
 }
