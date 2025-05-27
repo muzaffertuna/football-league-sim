@@ -122,28 +122,6 @@ func (h *LeagueHandler) ResetLeague(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("League reset successfully"))
 }
 
-// @Summary Tüm maç fikstürünü getirir
-// @Description Ligin tüm maç fikstürünü döndürür
-// @Tags league
-// @Produce json
-// @Success 200 {object} models.League
-// @Failure 500 {string} string "Internal server error"
-// @Router /fixture [get]
-func (h *LeagueHandler) GetFixture(w http.ResponseWriter, r *http.Request) {
-	league, err := h.leagueSvc.GetLeagueTable()
-	if err != nil {
-		h.logger.Error("Failed to get league table: " + err.Error())
-		http.Error(w, "Failed to get league table", http.StatusInternalServerError)
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(league); err != nil {
-		h.logger.Error("Failed to encode fixture: " + err.Error())
-		http.Error(w, "Failed to encode response", http.StatusInternalServerError)
-	}
-}
-
 // @Summary Tüm ligi simüle eder
 // @Description Ligdeki kalan tüm haftaları otomatik olarak simüle eder ve sonuçları döndürür
 // @Tags league

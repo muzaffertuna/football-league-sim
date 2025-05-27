@@ -1,6 +1,10 @@
 definitions:
   models.League:
     properties:
+      championshipPredictions:
+        items:
+          $ref: '#/definitions/models.Prediction'
+        type: array
       current_week:
         type: integer
       matches:
@@ -28,6 +32,16 @@ definitions:
         type: boolean
       week:
         type: integer
+    type: object
+  models.Prediction:
+    properties:
+      championship_likelihood:
+        description: Şampiyonluk olasılığı (%)
+        type: number
+      team_id:
+        type: integer
+      team_name:
+        type: string
     type: object
   models.Team:
     properties:
@@ -58,23 +72,6 @@ definitions:
 info:
   contact: {}
 paths:
-  /fixture:
-    get:
-      description: Ligin tüm maç fikstürünü döndürür
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/models.League'
-        "500":
-          description: Internal server error
-          schema:
-            type: string
-      summary: Tüm maç fikstürünü getirir
-      tags:
-      - league
   /league-table:
     get:
       description: Mevcut lig tablosunu puan sırasına göre döndürür

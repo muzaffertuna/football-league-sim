@@ -24,7 +24,7 @@ func NewRouter(leagueHandler LeagueHandlerContract) http.Handler { // <--- Düze
 	r.Get("/league-table", leagueHandler.GetLeagueTable)
 	r.Post("/play-week", leagueHandler.PlayWeek)
 	r.Post("/reset-league", leagueHandler.ResetLeague)
-	r.Get("/fixture", leagueHandler.GetFixture)
+	// r.Get("/fixture", leagueHandler.GetFixture)
 	r.Post("/simulate-all-weeks", leagueHandler.SimulateAllWeeks)
 
 	return r

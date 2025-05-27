@@ -4,32 +4,6 @@
         "contact": {}
     },
     "paths": {
-        "/fixture": {
-            "get": {
-                "description": "Ligin tüm maç fikstürünü döndürür",
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "league"
-                ],
-                "summary": "Tüm maç fikstürünü getirir",
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/models.League"
-                        }
-                    },
-                    "500": {
-                        "description": "Internal server error",
-                        "schema": {
-                            "type": "string"
-                        }
-                    }
-                }
-            }
-        },
         "/league-table": {
             "get": {
                 "description": "Mevcut lig tablosunu puan sırasına göre döndürür",
@@ -142,6 +116,12 @@
         "models.League": {
             "type": "object",
             "properties": {
+                "championshipPredictions": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Prediction"
+                    }
+                },
                 "current_week": {
                     "type": "integer"
                 },
@@ -182,6 +162,21 @@
                 },
                 "week": {
                     "type": "integer"
+                }
+            }
+        },
+        "models.Prediction": {
+            "type": "object",
+            "properties": {
+                "championship_likelihood": {
+                    "description": "Şampiyonluk olasılığı (%)",
+                    "type": "number"
+                },
+                "team_id": {
+                    "type": "integer"
+                },
+                "team_name": {
+                    "type": "string"
                 }
             }
         },

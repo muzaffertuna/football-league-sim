@@ -8,6 +8,5 @@ type LeagueHandlerContract interface {
 	GetLeagueTable(w http.ResponseWriter, r *http.Request)
 	PlayWeek(w http.ResponseWriter, r *http.Request)
 	ResetLeague(w http.ResponseWriter, r *http.Request)
-	GetFixture(w http.ResponseWriter, r *http.Request)
 	SimulateAllWeeks(w http.ResponseWriter, r *http.Request)
 }
