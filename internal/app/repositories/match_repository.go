@@ -169,13 +169,11 @@ func (r *matchRepository) GetPlayedMatches() ([]models.Match, error) {
 	return matches, nil
 }
 
-// GetMaxWeekPlayed returns the maximum week number that has at least one played match.
-// If no matches have been played, it returns 0.
 func (r *matchRepository) GetMaxWeekPlayed() (int, error) {
 	query := `
 		SELECT ISNULL(MAX(Week), 0)
 		FROM Matches
-		WHERE Played = 1;` // Sadece oynanmış maçların haftalarını dikkate al
+		WHERE Played = 1;`
 
 	var maxWeek int
 	err := r.db.QueryRow(query).Scan(&maxWeek)

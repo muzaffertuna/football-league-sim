@@ -11,7 +11,7 @@ import (
 type InMemoryMatchRepository struct {
 	mu      sync.RWMutex
 	matches map[int]models.Match
-	nextID  int // Otomatik ID atamak için
+	nextID  int
 }
 
 // NewInMemoryMatchRepository bellek içi maç deposunun yeni bir örneğini oluşturur.
@@ -31,27 +31,25 @@ func (r *InMemoryMatchRepository) CreateMatch(match *models.Match) error {
 		match.ID = r.nextID
 		r.nextID++
 	} else {
-		if match.ID >= r.nextID { // Var olan bir ID ile geliyorsa, nextID'yi ona göre ayarla ve çakışmayı önle
+		if match.ID >= r.nextID {
 			r.nextID = match.ID + 1
 		}
 	}
-	r.matches[match.ID] = *match // Pointer'dan değeri kopyala
+	r.matches[match.ID] = *match
 	return nil
 }
 
-// GetMatchByID belirtilen ID'ye sahip maçı getirir.
 func (r *InMemoryMatchRepository) GetMatchByID(id int) (*models.Match, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
 
 	match, ok := r.matches[id]
 	if !ok {
-		return nil, nil // sql.ErrNoRows yerine nil, nil dönüyoruz
+		return nil, nil
 	}
 	return &match, nil
 }
 
-// GetMatchesByWeek belirli bir haftadaki tüm maçları getirir.
 func (r *InMemoryMatchRepository) GetMatchesByWeek(week int) ([]models.Match, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -65,7 +63,6 @@ func (r *InMemoryMatchRepository) GetMatchesByWeek(week int) ([]models.Match, er
 	return weekMatches, nil
 }
 
-// GetAllMatches tüm maçları getirir.
 func (r *InMemoryMatchRepository) GetAllMatches() ([]models.Match, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -77,7 +74,6 @@ func (r *InMemoryMatchRepository) GetAllMatches() ([]models.Match, error) {
 	return allMatches, nil
 }
 
-// UpdateMatch mevcut bir maçın bilgilerini günceller. İMZA Orijinal MatchRepository ile AYNI: *models.Match alır.
 func (r *InMemoryMatchRepository) UpdateMatch(match *models.Match) error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -85,13 +81,10 @@ func (r *InMemoryMatchRepository) UpdateMatch(match *models.Match) error {
 	if _, ok := r.matches[match.ID]; !ok {
 		return fmt.Errorf("match with ID %d not found for update", match.ID)
 	}
-	r.matches[match.ID] = *match // Pointer'dan değeri kopyala
+	r.matches[match.ID] = *match
 	return nil
 }
 
-// DeleteAllMatches tüm maçları siler (sıfırlama için kullanılır).
-// Bu metod orijinal MatchRepository arayüzünüzde tanımlı olmasa bile,
-// InMemoryMatchRepository'de bulunmasında bir sakınca yoktur.
 func (r *InMemoryMatchRepository) DeleteAllMatches() error {
 	r.mu.Lock()
 	defer r.mu.Unlock()
@@ -101,7 +94,6 @@ func (r *InMemoryMatchRepository) DeleteAllMatches() error {
 	return nil
 }
 
-// GetPlayedMatches Orijinal MatchRepository'de olduğu gibi.
 func (r *InMemoryMatchRepository) GetPlayedMatches() ([]models.Match, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()
@@ -115,7 +107,6 @@ func (r *InMemoryMatchRepository) GetPlayedMatches() ([]models.Match, error) {
 	return playedMatches, nil
 }
 
-// GetMaxWeekPlayed Orijinal MatchRepository'de olduğu gibi.
 func (r *InMemoryMatchRepository) GetMaxWeekPlayed() (int, error) {
 	r.mu.RLock()
 	defer r.mu.RUnlock()

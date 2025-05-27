@@ -14,10 +14,10 @@ type MatchRepository interface {
 	GetMatchByID(id int) (*models.Match, error)
 	GetMatchesByWeek(week int) ([]models.Match, error)
 	UpdateMatch(match *models.Match) error
-	DeleteAllMatches() error // Yeni metod
+	DeleteAllMatches() error
 	GetAllMatches() ([]models.Match, error)
-	GetPlayedMatches() ([]models.Match, error) // Zaten vardı, bu metot kullanılacak
-	GetMaxWeekPlayed() (int, error)            // YENİ: En yüksek oynanmış haftayı döndürür
+	GetPlayedMatches() ([]models.Match, error)
+	GetMaxWeekPlayed() (int, error)
 }
 
 type LeagueRepository interface {

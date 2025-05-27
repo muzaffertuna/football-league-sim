@@ -6,32 +6,32 @@ import (
 )
 
 type teamService struct {
-    teamRepo repositories.TeamRepository
+	teamRepo repositories.TeamRepository
 }
 
 func NewTeamService(teamRepo repositories.TeamRepository) TeamService {
-    return &teamService{teamRepo: teamRepo}
+	return &teamService{teamRepo: teamRepo}
 }
 
 func (s *teamService) CreateTeam(name string, strength int) (*models.Team, error) {
-    team := &models.Team{
-        Name:         name,
-        Strength:     strength,
-        Points:       0,
-        GoalsFor:     0,
-        GoalsAgainst: 0,
-        MatchesPlayed: 0,
-    }
-    if err := s.teamRepo.CreateTeam(team); err != nil {
-        return nil, err
-    }
-    return team, nil
+	team := &models.Team{
+		Name:          name,
+		Strength:      strength,
+		Points:        0,
+		GoalsFor:      0,
+		GoalsAgainst:  0,
+		MatchesPlayed: 0,
+	}
+	if err := s.teamRepo.CreateTeam(team); err != nil {
+		return nil, err
+	}
+	return team, nil
 }
 
 func (s *teamService) GetTeamByID(id int) (*models.Team, error) {
-    return s.teamRepo.GetTeamByID(id)
+	return s.teamRepo.GetTeamByID(id)
 }
 
 func (s *teamService) GetAllTeams() ([]models.Team, error) {
-    return s.teamRepo.GetAllTeams()
+	return s.teamRepo.GetAllTeams()
 }

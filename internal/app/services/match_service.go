@@ -32,14 +32,12 @@ func (s *matchService) CreateMatch(homeTeamID, awayTeamID, week int) (*models.Ma
 
 func (s *matchService) SimulateMatch(match *models.Match, homeTeam, awayTeam *models.Team) error {
 	if match.Played {
-		return nil // Zaten oynanmışsa hiçbir şey yapma
+		return nil
 	}
 
 	rand.Seed(time.Now().UnixNano())
-	homeAdvantage := 10 // Ev sahibi avantajı
-	// Gol şansları
+	homeAdvantage := 10
 	homeChance := float64(homeTeam.Strength+homeAdvantage) / float64(homeTeam.Strength+awayTeam.Strength+homeAdvantage)
-	// awayChance := float64(awayTeam.Strength) / float64(homeTeam.Strength+awayTeam.Strength+homeAdvantage) // Away için ayrı bir şansa gerek yok, 1-homeChance yeterli
 
 	homeGoals := 0
 	awayGoals := 0
@@ -49,9 +47,7 @@ func (s *matchService) SimulateMatch(match *models.Match, homeTeam, awayTeam *mo
 		if rand.Float64() < homeChance {
 			homeGoals++
 		}
-		// Deplasman takımının gol şansı: 1 - ev sahibi gol şansı
-		// Bu şekilde goller birbirini dengelemez ve daha gerçekçi olur.
-		if rand.Float64() < (1 - homeChance) { // Bu satırda daha önce sorun yoktu
+		if rand.Float64() < (1 - homeChance) {
 			awayGoals++
 		}
 	}
@@ -59,12 +55,10 @@ func (s *matchService) SimulateMatch(match *models.Match, homeTeam, awayTeam *mo
 	match.HomeGoals = homeGoals
 	match.AwayGoals = awayGoals
 	match.Played = true
-	// Maç sonucunu repository'e kaydet
 	if err := s.matchRepo.UpdateMatch(match); err != nil {
 		return err
 	}
 
-	// TAKIM İSTATİSTİKLERİNİ GÜNCELLEME SADECE BURADA YAPILACAK!
 	homeTeam.MatchesPlayed++
 	awayTeam.MatchesPlayed++
 
@@ -76,19 +70,18 @@ func (s *matchService) SimulateMatch(match *models.Match, homeTeam, awayTeam *mo
 	if homeGoals > awayGoals {
 		homeTeam.Wins++
 		awayTeam.Loses++
-		homeTeam.Points += 3 // Galibiyet 3 puan
+		homeTeam.Points += 3
 	} else if homeGoals < awayGoals {
 		homeTeam.Loses++
 		awayTeam.Wins++
-		awayTeam.Points += 3 // Galibiyet 3 puan
-	} else { // Beraberlik
+		awayTeam.Points += 3
+	} else {
 		homeTeam.Draws++
 		awayTeam.Draws++
-		homeTeam.Points += 1 // Beraberlik 1 puan
-		awayTeam.Points += 1 // Beraberlik 1 puan
+		homeTeam.Points += 1
+		awayTeam.Points += 1
 	}
 
-	// Takımların güncellenmiş hallerini repository'e kaydet
 	if err := s.teamRepo.UpdateTeam(homeTeam); err != nil {
 		return err
 	}

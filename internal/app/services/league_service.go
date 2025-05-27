@@ -27,7 +27,6 @@ func NewLeagueService(matchRepo repositories.MatchRepository, matchSvc MatchServ
 		teamSvc:   teamSvc,
 	}
 
-	// Uygulama başladığında CurrentWeek'i hesapla
 	err := ls.initializeCurrentWeek()
 	if err != nil {
 		return nil, fmt.Errorf("failed to initialize current week: %w", err)
@@ -36,7 +35,6 @@ func NewLeagueService(matchRepo repositories.MatchRepository, matchSvc MatchServ
 	return ls, nil
 }
 
-// initializeCurrentWeek başlangıçta mevcut haftayı hesaplar ve s.currentWeek'e atar
 func (s *leagueService) initializeCurrentWeek() error {
 	maxPlayedWeek, err := s.matchRepo.GetMaxWeekPlayed()
 	if err != nil {
@@ -49,7 +47,6 @@ func (s *leagueService) initializeCurrentWeek() error {
 		return nil
 	}
 
-	// maxPlayedWeek'teki tüm maçların oynanıp oynanmadığını kontrol et
 	matchesInMaxWeek, err := s.matchRepo.GetMatchesByWeek(maxPlayedWeek)
 	if err != nil {
 		return err
@@ -64,16 +61,13 @@ func (s *leagueService) initializeCurrentWeek() error {
 	}
 
 	if allPlayedInMaxWeek {
-		// Eğer en yüksek haftadaki tüm maçlar oynandıysa, bir sonraki haftaya geç.
 		s.currentWeek = maxPlayedWeek + 1
 	} else {
-		// Aksi takdirde, hala en yüksek haftadayız.
 		s.currentWeek = maxPlayedWeek
 	}
 	return nil
 }
 
-// GetCurrentWeek ligin güncel haftasını döndürür
 func (s *leagueService) GetCurrentWeek() (int, error) {
 	return s.currentWeek, nil
 }
@@ -92,18 +86,9 @@ func (s *leagueService) PlayWeek(week int) error {
 		return fmt.Errorf("no matches found for week %d", week)
 	}
 
-	// Bu döngüye gerek kalmadı çünkü initializeCurrentWeek ve currentWeek mantığı ile
-	// zaten oynanmış bir haftayı tekrar oynamaya çalışmamalıyız.
-	// for _, match := range matches {
-	// 	if match.Played {
-	// 		return fmt.Errorf("week %d has already been played", week)
-	// 	}
-	// }
-
 	for i := range matches {
 		match := &matches[i]
-		// MatchService'in zaten oynanmış maçları atladığı varsayılır.
-		// Ancak defensive programlama için burada da bir kontrol tutulabilir.
+
 		if match.Played {
 			continue
 		}
@@ -117,16 +102,11 @@ func (s *leagueService) PlayWeek(week int) error {
 			return err
 		}
 
-		// BURADA SADECE MAÇI SİMÜLE ETMEK ÇAĞRILIR.
-		// Takım istatistikleri (MatchesPlayed, GoalsFor, GoalsAgainst, Points, Wins, Draws, Loses)
-		// SimulateMatch fonksiyonu içinde güncellenecektir.
 		if err := s.matchSvc.SimulateMatch(match, homeTeam, awayTeam); err != nil {
 			return err
 		}
-		// Takımları güncelleme çağrılarına burada gerek yok, SimulateMatch içinde yapılıyor.
 	}
 
-	// Haftayı başarıyla oynadıktan sonra currentWeek'i bir artır
 	s.currentWeek = week + 1
 	return nil
 }
@@ -238,7 +218,6 @@ func (s *leagueService) ResetLeague() error {
 		return err
 	}
 
-	// Ligi sıfırladıktan sonra currentWeek'i 1'e geri getir
 	s.currentWeek = 1
 	return nil
 }
@@ -290,9 +269,6 @@ func (s *leagueService) GetTeamByID(id int) (*models.Team, error) {
 	return s.teamSvc.GetTeamByID(id)
 }
 
-// calculatePoints fonksiyonu artık doğrudan puanları hesapladığı için eski şekilde eklenmiyor.
-// PlayWeek içinde doğrudan galibiyete 3, beraberliğe 1 puan ekleniyor.
-// Bu fonksiyonu başka bir yerde kullanmıyorsanız silebilirsiniz.
 func calculatePoints(homeGoals, awayGoals int) int {
 	if homeGoals > awayGoals {
 		return 3 // Galibiyet
@@ -302,10 +278,6 @@ func calculatePoints(homeGoals, awayGoals int) int {
 		return 0 // Mağlubiyet
 	}
 }
-
-//--------------------------------------------------------------------
-
-// ... (mevcut LeagueService arayüzü ve leagueService struct tanımları) ...
 
 func (s *leagueService) PredictOutcomes(numSimulations int) (models.PredictionResult, error) {
 	fmt.Printf("PredictOutcomes: Starting %d simulations...\n", numSimulations)
@@ -328,18 +300,17 @@ func (s *leagueService) PredictOutcomes(numSimulations int) (models.PredictionRe
 
 	var wg sync.WaitGroup
 	resultsChan := make(chan int, numSimulations)
-	errorChan := make(chan error, numSimulations) // Hataları yakalamak için kanal
+	errorChan := make(chan error, numSimulations)
 
 	for i := 0; i < numSimulations; i++ {
 		wg.Add(1)
-		go func(simIndex int) { // simIndex parametre olarak eklendi
+		go func(simIndex int) {
 			defer wg.Done()
 			fmt.Printf("PredictOutcomes: Goroutine %d started (Sim #%d).\n", simIndex, simIndex+1)
 
 			tempTeamRepo := repositories.NewInMemoryTeamRepository()
 			tempMatchRepo := repositories.NewInMemoryMatchRepository()
 
-			// Takım verilerini kopyala
 			for _, team := range initialTeams {
 				copiedTeam := models.Team{ // Deep copy
 					ID:            team.ID,
@@ -362,7 +333,6 @@ func (s *leagueService) PredictOutcomes(numSimulations int) (models.PredictionRe
 			}
 			fmt.Printf("PredictOutcomes: Sim %d teams copied.\n", simIndex)
 
-			// Maç verilerini kopyala
 			for _, match := range initialMatches {
 				copiedMatch := models.Match{ // Deep copy
 					ID:         match.ID,
@@ -403,8 +373,6 @@ func (s *leagueService) PredictOutcomes(numSimulations int) (models.PredictionRe
 			}
 			fmt.Printf("PredictOutcomes: Sim %d SimulateAllWeeks completed.\n", simIndex)
 
-			// Şampiyonu belirlemek için tempLeagueSvc'nin GetLeagueTable'ını çağırmak yerine,
-			// doğrudan tempTeamRepo'dan takımları alıp sıralayalım.
 			finalTeams, simErr := tempTeamRepo.GetAllTeams() // Doğrudan repo'dan al
 			if simErr != nil {
 				errMsg := fmt.Sprintf("PredictOutcomes: Sim %d failed to get final teams from tempRepo: %v", simIndex, simErr)
@@ -442,18 +410,16 @@ func (s *leagueService) PredictOutcomes(numSimulations int) (models.PredictionRe
 	case err := <-errorChan:
 		if err != nil {
 			fmt.Printf("PredictOutcomes: Main error channel received critical error from goroutine: %v\n", err)
-			return models.PredictionResult{}, err // Kritik hata varsa hemen dön
+			return models.PredictionResult{}, err
 		}
 	default:
 		// Hata yok
 	}
 	fmt.Println("PredictOutcomes: Processing simulation results from resultsChan.")
 
-	// CHAMPIONSHIP COUNTS'A EKLEME KISMINI KONTROL ET
 	for teamID := range resultsChan {
 		actualCount, ok := championshipCounts.Load(teamID)
 		if !ok {
-			// Eğer yoksa, 0 ile başlat
 			actualCount = 0
 		}
 		championshipCounts.Store(teamID, actualCount.(int)+1)
@@ -469,9 +435,7 @@ func (s *leagueService) PredictOutcomes(numSimulations int) (models.PredictionRe
 
 		team, err := s.teamRepo.GetTeamByID(teamID) // Orijinal repo'dan takım bilgisini al
 		if err != nil {
-			// **BURADA HATA YAKALANDIĞINDA DÖNGÜYÜ DURDURAN return false İFADESİ SORUN OLABİLİR.**
-			// Hatayı logla ama döngüyü devam ettirerek diğer tahminleri göstermeye çalışalım.
-			// Eğer teamRepo'da takım yoksa, bu bir problemdir ve loglanmalı.
+
 			fmt.Printf("PredictOutcomes: ERROR: Failed to get team by ID %d for prediction result: %v. This team's prediction will be skipped.\n", teamID, err)
 			return true // Hata olsa bile diğer takımlar için devam et
 		}

@@ -87,9 +87,9 @@ func (r *teamRepository) GetAllTeams() ([]models.Team, error) {
 			&team.GoalsFor,
 			&team.GoalsAgainst,
 			&team.MatchesPlayed,
-			&team.Wins,  // Yeni eklendi
-			&team.Draws, // Yeni eklendi
-			&team.Loses, // Yeni eklendi
+			&team.Wins,
+			&team.Draws,
+			&team.Loses,
 		); err != nil {
 			return nil, err
 		}
@@ -110,9 +110,9 @@ func (r *teamRepository) UpdateTeam(team *models.Team) error {
 		sql.Named("p4", team.GoalsFor),
 		sql.Named("p5", team.GoalsAgainst),
 		sql.Named("p6", team.MatchesPlayed),
-		sql.Named("p7", team.Wins),  // Yeni eklendi
-		sql.Named("p8", team.Draws), // Yeni eklendi
-		sql.Named("p9", team.Loses), // Yeni eklendi
+		sql.Named("p7", team.Wins),
+		sql.Named("p8", team.Draws),
+		sql.Named("p9", team.Loses),
 		sql.Named("p10", team.ID),
 	)
 	return err
