@@ -1,6 +1,7 @@
-package logger // <--- Paket adını logger olarak değiştirdik
+package logger
 
 import (
+	"io" // io paketi eklendi
 	"log"
 	"os"
 )
@@ -17,20 +18,13 @@ func NewLogger() *Logger {
 		log.Fatalf("Failed to open log file: %v", err)
 	}
 
+	// Hem dosyaya (file) hem de standart çıktıya (os.Stdout) yazmak için bir MultiWriter kullanırız.
+	multiWriter := io.MultiWriter(file, os.Stdout)
+
 	// log.Logger instance'ını oluştur
 	// Bayraklar: Tarih, saat ve kısa dosya yolu bilgisi eklensin
 	// Prefix boş bırakıldı, çünkü Info/Error metotlarında kendimiz formatlayacağız
-	stdLogger := log.New(file, "", log.Ldate|log.Ltime|log.Lshortfile)
-
-	// Hem dosyaya hem de standart çıktıya yazmak için bir MultiWriter kullanabiliriz.
-	// Ancak sizin mevcut kodunuz sadece stdout'a SetOutput yapmış, bu da log dosyasını etkisiz kılar.
-	// Hem dosyaya hem de stdout'a yazmasını istiyorsanız:
-	// multiWriter := io.MultiWriter(file, os.Stdout)
-	// stdLogger.SetOutput(multiWriter)
-
-	// Sizin mevcut kodunuzdaki gibi sadece stdout'a yazdırır ve dosyaya yazmaz:
-	stdLogger.SetOutput(os.Stdout) // <--- Burası sadece konsola yazar, dosyaya yazmaz.
-	// Eğer hem dosyaya hem konsola istiyorsanız yukarıdaki multiWriter'ı kullanın.
+	stdLogger := log.New(multiWriter, "", log.Ldate|log.Ltime|log.Lshortfile)
 
 	return &Logger{stdLogger}
 }
