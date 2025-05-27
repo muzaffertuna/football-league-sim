@@ -1,101 +1,188 @@
-Football League Simulation API
+````markdown
+# Football League Simulation API
+
 This project is a REST API developed in Go, designed to simulate a football league and predict team championship probabilities using advanced algorithms and concurrent processing.
-Features
 
-League Table: Displays the current league standings, including goal differences and championship probability predictions.
-Weekly Match Simulation: Simulates matches for the current week and updates team standings accordingly.
-Full League Simulation: Automatically simulates all remaining weeks to complete the season.
-League Reset: Resets team statistics and match fixtures to start a new season.
-Championship Predictions: Utilizes Monte Carlo simulation algorithms, executed concurrently using Go's goroutines for multithreaded performance, to calculate championship probabilities based on remaining matches.
-Advanced Logging: Implements detailed logging for info, warnings, and errors to streamline development and debugging.
-Automated Database Setup and Migration: Automatically checks and creates the required database schema and tables on startup, initializing fixture data as needed.
+## Features
 
-Prerequisites
+* **League Table**: Displays the current league standings, including goal differences and championship probability predictions.
+* **Weekly Match Simulation**: Simulates matches for the current week and updates team standings accordingly.
+* **Full League Simulation**: Automatically simulates all remaining weeks to complete the season.
+* **League Reset**: Resets team statistics and match fixtures to start a new season.
+* **Championship Predictions**: Utilizes Monte Carlo simulation algorithms, executed concurrently using Go's goroutines for multithreaded performance, to calculate championship probabilities based on remaining matches.
+* **Advanced Logging**: Implements detailed logging for info, warnings, and errors to streamline development and debugging. Log output is directed to both the console and an `app.log` file in the project root.
+* **Automated Database Setup and Migration**: Automatically checks and creates the required database schema and tables on application startup. Additionally, initial fixture data is automatically populated into the database as needed.
+
+## Prerequisites
+
 To set up and run this project locally, ensure you have the following installed:
 
-Go: Version 1.20 or higher. Install Go
-Docker Desktop: Required to run the MSSQL database. Download Docker Desktop
-Git: Used to clone the project repository. Download Git
+* **Go**: Version 1.20 or higher. [Install Go](https://go.dev/doc/install)
+* **Docker Desktop**: Required to run the MSSQL database. [Download Docker Desktop](https://www.docker.com/products/docker-desktop/)
+* **Git**: Used to clone the project repository. [Download Git](https://git-scm.com/downloads)
 
-Installation and Setup
+## Installation and Setup
+
 Follow these steps to set up and run the project locally:
-1. Clone the Repository
-Clone the project repository to your local machine:
-git clone https://github.com/muzaffertuna/football-league-sim.git
-cd football-league-sim
 
-2. Configure Environment Variables
-The API uses environment variables for configuration, such as database connection details and server address. Create a .env file in the project root directory (football-league-sim) and add the following content, replacing the password with a strong one of your choice:
-SA_PASSWORD="YourStrongPassword123"
+### 1. Clone the Repository
+
+First, clone the project repository to your local machine:
+
+```bash
+git clone [https://github.com/muzaffertuna/football-league-sim.git](https://github.com/muzaffertuna/football-league-sim.git)
+cd football-league-sim
+````
+
+### 2\. Configure Environment Variables
+
+The API uses environment variables for configuration, such as database connection details and server address. Create a `.env` file in the project root directory (`football-league-sim`) and add the following content, replacing the password with a strong one of your choice:
+
+```ini
+SA_PASSWORD="YourStrongPassword123" # <<< REPLACE WITH YOUR OWN STRONG PASSWORD!
 DB_CONNECTION_STRING="sqlserver://sa:${SA_PASSWORD}@localhost:1433?database=FootballLeagueSim&TrustServerCertificate=true"
 SERVER_ADDRESS=":8080"
+```
 
-3. Set Up and Start the Database
-The project includes a docker-compose.yml file in the root directory to configure and run an MSSQL database container, utilizing the SA_PASSWORD from the .env file.
-Start the database with:
+**Important**: Ensure the `SA_PASSWORD` value in your `.env` file **exactly matches** the strong password you will use for the MSSQL Server being brought up by Docker. This password will be used by both the Docker container and your Go application to connect to the database.
+
+### 3\. Set Up and Start the Database
+
+The project includes a `docker-compose.yml` file in the root directory. This file is configured to run an MSSQL database container and automatically uses the `SA_PASSWORD` from your `.env` file for database initialization.
+
+Start the database container using Docker Compose:
+
+```bash
 docker-compose up -d
+```
 
-4. Run the Go Application
-With the database running and the .env file configured, start the API application:
-cd cmd/api
+This command will download the Docker image (if not already present locally), start the MSSQL Server using your specified `SA_PASSWORD`, and map port `1433` from your host machine to the container's `1433` port. Please note that it may take a few minutes for the database to fully start and complete its initial setup.
+
+### 4\. Run the Go Application
+
+With the database running and your `.env` file correctly configured, you can now start the API application:
+
+```bash
+# Ensure you are in the project's root directory (football-league-sim)
+cd cmd/api # Navigate to the directory containing your main.go application file
+
 go run main.go
+```
 
-Upon successful startup, you should see output similar to:
+Upon successful startup, you should see output in your console similar to:
+
+```
 2025/05/27 16:07:56 logger.go:39: [INFO] Successfully connected to MSSQL
+2025/05/27 16:07:56 logger.go:39: [INFO] Database initialization and migration complete.
 2025/05/27 16:07:56 logger.go:39: [INFO] Starting server on :8080
+```
 
-5. Accessing and Testing the API
-The API will be available at http://localhost:8080. You can interact with the endpoints using the following methods:
-Method 1: Swagger UI (Recommended)
-Swagger UI provides a user-friendly interface to explore and test all API endpoints directly in your browser. Visit:
-http://localhost:8080/swagger/index.html#/
+The "Database initialization and migration complete." line confirms that the application has successfully set up the database schema and initial data.
 
-Expand each endpoint to view details, click "Try it out" to send requests, and review responses instantly.
-Method 2: Postman, cURL, or Similar Tools
-Alternatively, use tools like Postman, Insomnia, or cURL to send requests to the API endpoints.
-API Endpoints
-For the application to function correctly, you must reset the league before running simulations for the first time.
-POST /reset-league
-Description: Resets all team statistics and match fixtures to start a new season. This endpoint must be called before other simulation operations on first use to initialize the database. Subsequent uses can proceed without resetting.
-cURL Example:
-curl -X POST http://localhost:8080/reset-league
+### 5\. Accessing and Testing the API
 
-POST /play-week
-Description: Simulates matches for the current week and updates team standings. Each call advances to the next week.
-cURL Example:
-curl -X POST http://localhost:8080/play-week
+The API will be available locally at `http://localhost:8080`. You can interact with its endpoints using one of the following methods:
 
-GET /league-table
-Description: Retrieves the current league standings, including goal differences and championship probabilities calculated using multithreaded Monte Carlo simulations.
-cURL Example:
-curl -X GET http://localhost:8080/league-table
+#### Method 1: Swagger UI (Recommended)
 
-POST /simulate-all-weeks
-Description: Simulates all remaining weeks to complete the season.
-cURL Example:
-curl -X POST http://localhost:8080/simulate-all-weeks
+Swagger UI provides a user-friendly, interactive interface to explore and test all API endpoints directly in your web browser. This is the easiest way to get started and understand the API's functionality.
 
-Code Snippets
-Below are the key code snippets for easy reference and copying.
-Environment Variables (.env)
+  * Open your web browser and navigate to: `http://localhost:8080/swagger/index.html#/`
+
+  * You will be greeted with an interface similar to the one shown below:
+
+  * From this interface, you can expand each endpoint to view its details, click the "Try it out" button to send requests, and instantly review the responses.
+
+#### Method 2: Postman, cURL, or Similar Tools
+
+Alternatively, you can use popular API testing tools like Postman, Insomnia, or command-line utilities such as `cURL` to send requests to the API endpoints.
+
+## API Endpoints and Usage Flow
+
+For the application to function correctly and avoid database errors, you **must initialize the league** using the `POST /reset-league` endpoint before performing any other simulation operations for the first time.
+
+### `POST /reset-league`
+
+  * **Description**: Resets all team statistics and match fixtures to initiate a new season. **This endpoint must be called before other simulation operations on first use to ensure the database is properly initialized with fixture data.** Subsequent uses can proceed without resetting if you wish to continue the current simulation.
+  * **cURL Example**:
+    ```bash
+    curl -X POST http://localhost:8080/reset-league
+    ```
+
+### `POST /play-week`
+
+  * **Description**: Simulates matches for the current week and updates team standings accordingly. Each call advances the league to the next week.
+  * **cURL Example**:
+    ```bash
+    curl -X POST http://localhost:8080/play-week
+    ```
+
+### `GET /league-table`
+
+  * **Description**: Retrieves the current league standings, including goal differences and championship probabilities calculated using the multithreaded Monte Carlo simulations.
+  * **cURL Example**:
+    ```bash
+    curl -X GET http://localhost:8080/league-table
+    ```
+
+### `POST /simulate-all-weeks`
+
+  * **Description**: Automatically simulates all remaining weeks to complete the entire season.
+  * **cURL Example**:
+    ```bash
+    curl -X POST http://localhost:8080/simulate-all-weeks
+    ```
+
+## Simulation Scenarios
+
+After successfully running the API, you can try the following simulation scenarios:
+
+1.  **Initialize the League**: Start by sending a request to the `POST /reset-league` endpoint to set up a new season.
+2.  **Advance Week by Week**: Send successive requests to the `POST /play-week` endpoint to simulate matches week by week. Observe how the league standings evolve after each week.
+3.  **Check League Standings**: After simulating a week, call the `GET /league-table` endpoint to see the updated standings and championship probabilities. Pay attention to how the predictions change as the league progresses.
+4.  **Complete the Season**: If you wish to quickly finish the remaining part of the league, use the `POST /simulate-all-weeks` endpoint. This will automatically play out all remaining matches.
+
+## Code Snippets
+
+For quick reference and copying, here are the key code snippets mentioned in the setup:
+
+### Environment Variables (`.env`) Example
+
+```ini
 SA_PASSWORD="YourStrongPassword123"
 DB_CONNECTION_STRING="sqlserver://sa:${SA_PASSWORD}@localhost:1433?database=FootballLeagueSim&TrustServerCertificate=true"
 SERVER_ADDRESS=":8080"
+```
 
-Clone the Repository
-git clone https://github.com/muzaffertuna/football-league-sim.git
+### Clone the Repository
+
+```bash
+git clone [https://github.com/muzaffertuna/football-league-sim.git](https://github.com/muzaffertuna/football-league-sim.git)
 cd football-league-sim
+```
 
-Start the Database
+### Start the Database
+
+```bash
 docker-compose up -d
+```
 
-Run the Application
+### Run the Application
+
+```bash
 cd cmd/api
 go run main.go
+```
 
-Notes
+## Notes
 
-Ensure the .env file is correctly configured before starting the database and application.
-The /reset-league endpoint is mandatory for first-time setup to avoid database errors.
-Use Swagger UI for a seamless testing experience, or leverage tools like Postman for manual testing.
+  * Ensure the `.env` file is correctly configured with your chosen password before starting both the database and the application.
+  * The `POST /reset-league` endpoint is crucial for the first-time setup to avoid database errors and populate initial league data.
+  * Leverage Swagger UI for a seamless and interactive API testing experience, or utilize tools like Postman for manual testing if preferred.
+  * If you make changes to API endpoints or their annotations, update the Swagger documentation by running `swag init` in the `cmd/api` directory.
+  * Should you encounter any Go module-related issues (e.g., "missing modules" or import problems), execute `go mod tidy` in the project's root directory (`football-league-sim`).
 
+<!-- end list -->
+
+```
+```
