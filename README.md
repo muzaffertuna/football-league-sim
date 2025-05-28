@@ -63,10 +63,9 @@ This command will download the Docker image (if not already present locally), st
 With the database running and your `.env` file correctly configured, you can now start the API application:
 
 ```bash
-# Ensure you are in the project's root directory (football-league-sim)
-cd cmd/api # Navigate to the directory containing your main.go application file
+# Ensure you are in the project's root directory (football-league-sim) and run project like this:
 
-go run main.go
+go run cmd/api/main.go
 ```
 
 Upon successful startup, you should see output in your console similar to:
