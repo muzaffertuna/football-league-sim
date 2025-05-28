@@ -26,6 +26,3 @@
 
 # Dependency directories
 /tmp/
-
-# Swagger generated files (optional, if you regenerate them)
-/docs/docs.go
