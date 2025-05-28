@@ -80,7 +80,7 @@ The "Database initialization and migration complete." line confirms that the app
 
 ### 5\. Accessing and Testing the API
 
-The API will be available locally at `http://localhost:8080`. You can interact with its endpoints using one of the following methods:
+The API will be available locally at `http://localhost:8080/swagger/index.html#/`. You can interact with its endpoints using one of the following methods:
 
 #### Method 1: Swagger UI (Recommended)
 
